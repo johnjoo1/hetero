@@ -1,3 +1,6 @@
+This package has been modigied from pyEDA Cogenda to calculate band structure from heterojunctions.
+
+<<<<<<< HEAD
 pyEDA EDA Framework 
 Copyright (c) 2010 Cogenda Pte Ltd, Singapore
 This software is distributed under the GPLv3 (GNU General Public License version 3) license.
@@ -20,3 +23,6 @@ This software package was designed as the teaching tool for a computational elec
 Due to its educational purposes, clarity is emphasized over efficiency.
 Nevertheless, it is found useful in some pratical projects as well.
 
+=======
+hello world!
+>>>>>>> origin/master
