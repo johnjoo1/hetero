@@ -1,4 +1,4 @@
-__all__=['InsulatorMaterial', 'SemiconductorMaterial', 
+__all__=['InsulatorMaterial', 'SemiconductorMaterial', 'SiMaterial',  'Cu2OMaterial', 'ZnOMaterial',
          'SemiconductorRegionEqn', 'InsulatorRegionEqn', 'SemiconductorRegionEquEqn', 
          'OhmicBoundaryEqn', 'GateBoundaryEqn', 'OhmicBoundaryEquEqn', 'SimpleIFEqn']
 
@@ -20,36 +20,113 @@ class InsulatorMaterial(object):
         self.me_tnl = 0.5*Unit.me
         self.mh_tnl = 0.5*Unit.me
 
+class SiMaterial(object):
+    def __init__(self):
+        self.eps = 11.7*Unit.eps0
+        self.affinity = 4.17*Unit.V
+        self.Eg = 1.12*Unit.V
+        self.mun = 1000*Unit.cm*Unit.cm/Unit.V/Unit.s
+        self.mup = 400*Unit.cm*Unit.cm/Unit.V/Unit.s
+        self.tau = 1e-7*Unit.s
+        self.ni = 1.45e10*pow(Unit.cm, -3.0)
+
+        kb = 1.3806503e-23
+        T = 300.
+        hbar = 1.054571596e-34
+        m_e=9.10938188*10**-31 #kg
+        self.mh=((.50*m_e)**1.5 + (.15*m_e)**1.5)**(2./3.)
+        self.me=.98*m_e 
+        self.Nv=2.*(self.mh*kb*T/(2.*np.pi*hbar**2))**(3./2. )#m**-3
+        self.Nc=2.*(self.me*kb*T/(2.*np.pi*hbar**2))**(3./2.) #m**-3
+        
+        self.ni_T = sqrt(self.Nc*self.Nv*exp(-self.Eg/(kb*T/1.602e-19))) * 1./100.**3.        
+ 
+
 class SemiconductorMaterial(object):
     def __init__(self):
         self.eps = 11.7*Unit.eps0
         self.affinity = 4.17*Unit.V
         self.Eg = 1.12*Unit.V
-        self.ni = 1.45e10*pow(Unit.cm, -3.0)
-        
         self.mun = 1000*Unit.cm*Unit.cm/Unit.V/Unit.s
         self.mup = 400*Unit.cm*Unit.cm/Unit.V/Unit.s
         self.tau = 1e-7*Unit.s
+        self.ni = 1.45e10*pow(Unit.cm, -3.0)
+
+        kb = 1.3806503e-23
+        T = 300.
+        hbar = 1.054571596e-34
+        m_e=9.10938188*10**-31 #kg
+        self.mh=((.50*m_e)**1.5 + (.15*m_e)**1.5)**(2./3.)
+        self.me=.98*m_e 
+        self.Nv=2.*(self.mh*kb*T/(2.*np.pi*hbar**2))**(3./2. )#m**-3
+        self.Nc=2.*(self.me*kb*T/(2.*np.pi*hbar**2))**(3./2.) #m**-3
         
-class SemiconductorRegionEqn(RegionEqn):
+        self.ni_T = sqrt(self.Nc*self.Nv*exp(-self.Eg/(kb*T/1.602e-19))) * 1./100.**3.     
+
+class Cu2OMaterial(object):
+    def __init__(self):
+        self.eps = 6.3*Unit.eps0
+        self.affinity = 3.2*Unit.V
+        self.Eg = 2.0*Unit.V
+        
+        kb = 1.3806503e-23
+        T = 298.18
+        hbar = 1.054571596e-34
+        m_e=9.10938188*10**-31 #kg
+        mh=.58*m_e #"Thin film deposition of Cu2O and application for solar cells"
+        me=.99*m_e #Biccari thesis
+        Nv=2.*(mh*kb*T/(2.*np.pi*hbar**2))**(3./2. )#m**-3
+        Nc=2.*(me*kb*T/(2.*np.pi*hbar**2))**(3./2.) #m**-3
+
+        self.ni = sqrt(Nc*Nv*exp(-self.Eg/(kb*T/1.602e-19))) * 1./100.**3.*pow(Unit.cm, -3.0)
+        print 'ni = %f\n' %self.ni
+        
+        self.mun = 100*Unit.cm*Unit.cm/Unit.V/Unit.s
+        self.mup = 90*Unit.cm*Unit.cm/Unit.V/Unit.s
+        self.tau = 1e-7*Unit.s
+
+class ZnOMaterial(object):
+    def __init__(self):
+        self.eps = 9.0*Unit.eps0 #Sze
+        self.affinity = 4.2*Unit.V
+        self.Eg = 3.3*Unit.V
+        
+        kb = 1.3806503e-23
+        T = 298.18
+        hbar = 1.054571596e-34
+        m_e=9.10938188*10**-31 #kg
+        mh=.59*m_e #"Zinc Oxide Nanostructures: Synthesis and Properties" Zhiyong Fan and Jia G. Lu
+        me=.27*m_e #Sze
+        Nv=2.*(mh*kb*T/(2.*np.pi*hbar**2))**(3./2. )#m**-3
+        Nc=2.*(me*kb*T/(2.*np.pi*hbar**2))**(3./2.) #m**-3
+
+        self.ni = sqrt(Nc*Nv*exp(-self.Eg/(kb*T/1.602e-19))) * 1./100.**3.*pow(Unit.cm, -3.0)
+        print 'ni = %f\n' %self.ni
+        
+        self.mun = 200*Unit.cm*Unit.cm/Unit.V/Unit.s #"Zinc Oxide Nanostructures: Synthesis and Properties" Zhiyong Fan and Jia G. Lu
+        self.mup = 30*Unit.cm*Unit.cm/Unit.V/Unit.s #"Zinc Oxide Nanostructures: Synthesis and Properties" Zhiyong Fan and Jia G. Lu
+        self.tau = 1e-7*Unit.s
+        
+class SemiconductorRegionEqn(RegionEqn): 
+    #RegionEqn defined in FVMEqn. Initializes eqnPerCell(self), cellEqn(self, state, cell), elemEqn(self, state, elem), initGuess(self, state, cell), and damp(self, state, cell, dx).
     def __init__(self):
         super(SemiconductorRegionEqn,self).__init__()
         
-    def eqnPerCell(self):
+    def eqnPerCell(self): #defines 3 equations per cell
         return 3
     
     def cellEqn(self, state, cell):
         mtl = self.region.material
         ni,mun,mup,tau,eps = (mtl.ni, mtl.mun, mtl.mup, mtl.tau, mtl.eps)
         vol = cell.volume()
-        vars = cell.vars
+        vars = cell.vars #diode.regions[0].cells[n].vars
             
         dummy, n, p = state.getVars(vars)
         rho = Unit.e*(p-n+cell.fields['C'])
         Rsrh = (n*p-ni*ni)/(tau*(n+ni)+tau*(p+ni))
             
-        state.setFunJac(vars[0], -rho*vol)
-        state.setFunJac(vars[1], -Rsrh*vol)
+        state.setFunJac(vars[0], -rho*vol) 
+        state.setFunJac(vars[1], -Rsrh*vol) 
         state.setFunJac(vars[2], -Rsrh*vol)
     
     def elemEqn(self, state, elem):
@@ -102,7 +179,10 @@ class SemiconductorRegionEqn(RegionEqn):
         VT = 0.0258*Unit.V
 
         C = cell.fields['C']
-        n=0.5*(C+math.sqrt(C*C+4*ni*ni))
+        if 4*ni*ni < C*C/1e20:
+            n = 0.5*(C + math.sqrt(C*C) + 4*ni*ni/(2*abs(C)) - (4*ni**2)**2/(8*abs(C)**3) +  (4*ni**2)**3/(16*abs(C)**5) +  5*(4*ni**2)**4/(128*abs(C)**7) )
+        else:
+            n=0.5*(C+math.sqrt(C*C+4*ni*ni))
         p=0.5*(-C+math.sqrt(C*C+4*ni*ni))
         phi=VT*math.log(n/ni) - mtl.Eg/2.0 - mtl.affinity
 
@@ -158,7 +238,13 @@ class OhmicBoundaryEqn(BoundaryEqn):
         V, n, p = state.getVars(cell.vars)
         
         ni = mtl.ni
-        nb=0.5*(C+math.sqrt(C*C+4*ni*ni))
+#        nb=0.5*(C+math.sqrt(C*C+4*ni*ni))
+#        pb=0.5*(-C+math.sqrt(C*C+4*ni*ni))
+        
+        if 4*ni*ni < C*C/1e20:
+            nb = 0.5*(C + math.sqrt(C*C) + 4*ni*ni/(2*abs(C)) - (4*ni**2)**2/(8*abs(C)**3) +  (4*ni**2)**3/(16*abs(C)**5) +  5*(4*ni**2)**4/(128*abs(C)**7) )
+        else:
+            nb=0.5*(C+math.sqrt(C*C+4*ni*ni))
         pb=0.5*(-C+math.sqrt(C*C+4*ni*ni))
         Vb=self.voltage + VT*math.log(nb/ni) - mtl.Eg/2.0 - mtl.affinity
 
